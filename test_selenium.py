@@ -1,6 +1,5 @@
 import os
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
@@ -8,16 +7,13 @@ from webdriver_manager.chrome import ChromeDriverManager
 chrome_options = Options()
 chrome_options.add_argument("--headless")  # Optional: comment out if you don't need headless mode
 
-# Download and set up ChromeDriver using WebDriverManager
+# Use WebDriverManager to install the required version of ChromeDriver
 driver_path = ChromeDriverManager().install()
 
-# Create a Service object using the downloaded ChromeDriver
-service = Service(executable_path=driver_path)
+# Initialize WebDriver with the downloaded ChromeDriver path
+driver = webdriver.Chrome(executable_path=driver_path, options=chrome_options)
 
-# Initialize WebDriver with the Service and options
-driver = webdriver.Chrome(service=service, options=chrome_options)
-
-# Navigate to Google
+# Perform the operations
 driver.get("http://www.google.com")
 if "Google" not in driver.title:
     raise Exception("Unable to load Google page!")
