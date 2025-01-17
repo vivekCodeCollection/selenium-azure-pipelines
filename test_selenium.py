@@ -1,69 +1,71 @@
 import os
 import time
+import ssl
 import urllib.request
 import zipfile
-import sys
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
-# Get your username and authkey from environment variables
+# Disable SSL verification (temporary workaround for SSL certificate issues)
+ssl._create_default_https_context = ssl._create_unverified_context
+
+# Set your username and authkey from environment variables
 username = os.getenv("CBT_USERNAME")
 authkey = os.getenv("CBT_AUTHKEY")
 
-# Chrome version (replace it with the version your container uses)
-chrome_version = "latest"  # You can set a specific version here
+# Chrome version (replace it with the version your container uses, or keep as "latest")
+chrome_version = "latest"  # Change if you need a specific version
 
-# Set up the desired capabilities for the browser
+# Set up desired capabilities for the browser
 caps = DesiredCapabilities.CHROME.copy()
 caps['platform'] = 'Windows'
 
-# Setup Chrome options
+# Setup Chrome options (headless is optional, use if you want to run without UI)
 chrome_options = Options()
-chrome_options.add_argument("--headless")  # Optional if running headless
+chrome_options.add_argument("--headless")  # Optional: comment out if you don't need headless mode
 
-# Download ChromeDriver based on the browser version
+# Function to download ChromeDriver dynamically
 def download_chromedriver(version="latest"):
-    # Build the URL to download the corresponding ChromeDriver
     if version == "latest":
-        version_url = "https://chromedriver.storage.googleapis.com/2.41/chromedriver_win32.zip"
+        version_url = "https://chromedriver.storage.googleapis.com/2.41/chromedriver_win32.zip"  # Update the URL as needed
     else:
-        # In case you need a specific version of ChromeDriver
+        # You can specify a different ChromeDriver version if needed
         version_url = f"https://chromedriver.storage.googleapis.com/{version}/chromedriver_win32.zip"
     
-    # Temp directory to download the driver
+    # Directory where ChromeDriver will be downloaded and extracted
     download_dir = "/tmp/chromedriver"
-
-    # Ensure the download directory exists
+    
+    # Create the directory if it doesn't exist
     if not os.path.exists(download_dir):
         os.makedirs(download_dir)
 
-    # Full path where the driver will be extracted
+    # Paths for downloading and extracting ChromeDriver
     driver_zip = os.path.join(download_dir, "chromedriver.zip")
     driver_path = os.path.join(download_dir, "chromedriver.exe")
 
     # Download ChromeDriver
     urllib.request.urlretrieve(version_url, driver_zip)
 
-    # Extract the downloaded driver
+    # Extract the downloaded zip file
     with zipfile.ZipFile(driver_zip, 'r') as zip_ref:
         zip_ref.extractall(download_dir)
 
     return driver_path
 
-# Download the appropriate ChromeDriver (for latest version in this case)
+# Download the appropriate ChromeDriver (latest version by default)
 chromedriver_path = download_chromedriver(version=chrome_version)
 
-# Set up the Service with the downloaded ChromeDriver
+# Create a Service object using the downloaded ChromeDriver
 service = Service(executable_path=chromedriver_path)
 
-# Create the WebDriver object for remote execution
+# Connect to the remote browser on CrossBrowserTesting
 driver = webdriver.Remote(
     command_executor=f"http://{username}:{authkey}@hub.crossbrowsertesting.com/wd/hub",
     desired_capabilities=caps,
     options=chrome_options,
-    service=service  # Include the service with the path to ChromeDriver
+    service=service  # Pass the service with ChromeDriver path
 )
 
 # Perform the test steps
@@ -71,6 +73,7 @@ driver.get("http://www.google.com")
 if "Google" not in driver.title:
     raise Exception("Unable to load Google page!")
 
+# Locate the search bar, perform a search, and submit
 elem = driver.find_element("name", "q")
 elem.send_keys("CrossBrowserTesting")
 elem.submit()
