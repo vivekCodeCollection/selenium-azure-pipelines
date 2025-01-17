@@ -60,13 +60,12 @@ chromedriver_path = download_chromedriver(version=chrome_version)
 # Create a Service object using the downloaded ChromeDriver
 service = Service(executable_path=chromedriver_path)
 
-# Connect to the remote browser on CrossBrowserTesting
-driver = webdriver.Remote(
-    command_executor=f"http://{username}:{authkey}@hub.crossbrowsertesting.com/wd/hub",
-    desired_capabilities=caps,
-    options=chrome_options,
-    service=service  # Pass the service with ChromeDriver path
-)
+# Now pass the service object while creating the WebDriver object
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # Optional, if you want to run Chrome headless
+
+# Pass the service to the WebDriver (not to Remote())
+driver = webdriver.Chrome(service=service, options=chrome_options)
 
 # Perform the test steps
 driver.get("http://www.google.com")
