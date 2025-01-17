@@ -1,30 +1,17 @@
-import os
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 
-# Set up desired capabilities for the browser (if needed)
-chrome_options = Options()
-chrome_options.add_argument("--headless")  # Optional: comment out if you don't need headless mode
+# Set up the Chrome driver using webdriver_manager
+service = Service(ChromeDriverManager().install())
 
-# Use WebDriverManager to install the required version of ChromeDriver
-driver_path = ChromeDriverManager().install()
+# Initialize the Chrome browser
+driver = webdriver.Chrome(service=service)
 
-# Initialize WebDriver with the downloaded ChromeDriver path
-driver = webdriver.Chrome(executable_path=driver_path, options=chrome_options)
+# Open a website
+driver.get("https://www.example.com")
 
-# Perform the operations
-driver.get("http://www.google.com")
-if "Google" not in driver.title:
-    raise Exception("Unable to load Google page!")
+# Perform any actions you need here
 
-# Perform a search operation
-elem = driver.find_element("name", "q")
-elem.send_keys("CrossBrowserTesting")
-elem.submit()
-
-# Print the title of the page
-print(driver.title)
-
-# Close the driver and end the session
+# Close the browser
 driver.quit()
