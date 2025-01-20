@@ -10,7 +10,7 @@ trigger:
 pool: 
    name: AutomationAgentPool
    demands:
-    - Agent.Name -equals win1
+    - Agent.Name -equals win2
 
 strategy:
   matrix:
